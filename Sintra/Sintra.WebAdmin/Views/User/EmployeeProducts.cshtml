@@ -1,0 +1,229 @@
+﻿@model IEnumerable<Warehouse>
+
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Products</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="m-b-30">
+                        <button id="transferbtn" onclick="
+                if(confirm('Are you sure you want to move the products you selected to another warehouse?'))
+                $('#editmodal').modal('show');"
+                                class="btn btn-default waves-effect waves-light">
+                            Transfer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                   
+                                    <th>Name</th>
+                                    <th>Warehouse</th>
+                                    <th>Barcode</th>
+                                    <th>Price</th>
+                                    <th>Balance</th>
+                                    <th>Transfer</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <input type="hidden" id="id" />
+                        <div class="form-group">
+                            <select id="warehouseId" class="form-control">
+                                @foreach (var item in Model)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Send Request</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+        var refreshdata = function () {
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                ajax: {
+                    url: document.location.origin + '/User/GetEmployeeProducts?userId='+ '@ViewBag.id' ,
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "name", name: "Name" },
+                    { data: "warehouseName", name: "WarehouseName" },
+                    { data: "barcode", name: "Barcode" },
+                    { data: "price", name: "Price" },
+                    { data: "balance", name: "Balance" },
+                    { data: "transfer", name: "Transfer" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            document.getElementById("id").value = "";
+            document.getElementById("name").value = "";
+            document.getElementById("barcode").value = "";
+            document.getElementById("balance").value = "";
+            document.getElementById("price").value = "";
+        }
+        refreshdata();
+
+    </script>
+
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".editlink", function () {
+                emptydata();
+                clickedId = $(this).attr("id")
+                $.ajax(
+                    {
+                        url: document.location.origin + '/User/GetEmployeeProducts?userId=' + clickedId,
+                        type: 'GET',
+                        data: "",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            console.log(data)
+                            $('#id').val(data.data.id);
+                            $('#name').val(data.data.name);
+                            $('#barcode').val(data.data.barcode);
+                            $('#balance').val(data.data.balance);
+                            $('#price').val(data.data.price);
+
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+            });
+        })
+    </script>
+
+
+    <script name="validationregion">
+        function validationcheck() {
+            $('.validator').remove();
+            let auth = true;
+
+            $('.myvalidation').each(function () {
+                if ($(this).val() == "") {
+                    auth = false;
+                    $(this).after("<span class='validator text-danger'>This field is required</span>")
+                }
+            })
+            return auth;
+        }
+
+        function delay(callback, ms) {
+            var timer = 0;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    callback.apply(context, args);
+                }, ms || 0);
+            };
+        }
+
+        $(document).on("input", ".productcountinput", delay(function (e) {
+            this.validity.valid || (this.value = ''); 
+            
+        }, 700));
+
+
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+
+            $(document).on("click", "#savebtn", function () {
+                let request = [];
+                if (validationcheck()) {
+                    var inputs = $(".productcountinput");
+                    
+                    for (var i = 0; i < inputs.length; i++) {
+                        request.push(
+                        {
+                            productId: $(inputs[i]).attr("id"),
+                            quantity: $(inputs[i]).val(),
+                            fromWarehouseId: $(inputs[i]).attr("data-frwid"),
+                            toWarehouseId: $('#warehouseId').val()
+                        })
+
+                    }
+
+                    var command = { request: request }
+
+                    var url = '@Url.Action("CreateProductTransfer", "ProductTransfer")'
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: command,
+                        success: function (data) {
+                            $('#editmodal').modal('hide')
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+                }
+
+
+            });
+        })
+    </script>
+
+}

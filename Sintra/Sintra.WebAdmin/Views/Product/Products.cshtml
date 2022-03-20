@@ -1,0 +1,321 @@
+﻿@model IEnumerable<Category>
+
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Products</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="m-b-30">
+                        <button id="addToTable" data-toggle='modal' onclick="emptydata()"
+                                data-target='#editmodal'
+                                class="btn btn-default waves-effect waves-light">
+                           Add <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                     <th> Name </th>
+                                    <th> Barcode </th>
+                                    <th> Description </th>
+                                    <th> Price </th>
+                                    <th> Product type </th>
+                                    <th> Usage time </th>
+                                    <th> Accessories </th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Name <span style="color:red;margin-top:15px;">*</span></label>
+                            <input type="text" class="form-control myvalidation" id="name" name="name" placeholder="Enter  name">
+                            <input type="hidden" id="id" />
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Barcode <span style="color:red;margin-top:15px;">*</span></label>
+                            <input type="text" class="form-control myvalidation" id="barcode" name="barcode" placeholder="Enter barcode">
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Description</label>
+                            <input type="text" class="form-control" id="description" name="description" placeholder="Enter  description">
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Price <span style="color:red;margin-top:15px;">*</span></label>
+                            <input type="number" min='1' class="form-control numberInput" id="price" name="price" placeholder="Enter price">
+                        </div>
+                        <div class="form-group" id="prType">
+                            <label for="exampleInputEmail1">Type <span style="color:red;margin-top:15px;">*</span></label>
+                            <select id="productType" class="form-control myvalidation">
+                                <option value="">Select</option>
+                                @foreach (var item in ProductType.ProductTypes)
+                                {
+                                    <option value="@item.Id">@item.Value</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group" id="prCat">
+                            <label for="exampleInputEmail1">Category <span style="color:red;margin-top:15px;">*</span></label>
+                            <select id="productCategory" class="form-control myvalidation">
+                                <option value="">Select</option>
+                                @foreach (var item in Model)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+        var refreshdata = function () {
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                "aaSorting": [],
+                ajax: {
+                    url: document.location.origin + '/Product/GetProducts',
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "name", name: "Name" },
+                    { data: "barcode", name: "Barcode" },
+                    { data: "description", name: "Description" },
+                    { data: "price", name: "Price" },
+                    { data: "type", name: "Product Type" },
+                    { data: "repeatDayy", name: "Repeat Day" },
+                    { data: "manageProductAccessories", name: "ManageProductAccessories" },
+                    { data: "actions", name: "actions" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            $('#repeatDay').remove();
+            $('#productType').removeAttr('disabled');
+            $('#productCategory').removeAttr('disabled');
+            document.getElementById("productType").value = "";
+            document.getElementById('productCategory').value = "";
+            document.getElementById("id").value = "";
+            document.getElementById("name").value = "";
+            document.getElementById("barcode").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("price").value = "";
+        }
+        refreshdata();
+
+    </script>
+
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".editlink", function () {
+                emptydata();
+                clickedId = $(this).attr("id")
+                $.ajax(
+                    {
+                        url: document.location.origin + '/Product/GetProductById?id=' + clickedId,
+                        type: 'GET',
+                        data: "",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            console.log(data)
+                            $('#id').val(data.data.id);
+                            $('#name').val(data.data.name);
+                            $('#barcode').val(data.data.barcode);
+                            $('#description').val(data.data.description);
+                            $('#price').val(data.data.price);
+                            if (data.data.productTypeId == 1 || data.data.productTypeId == 2) {
+                                $('#productType').attr('disabled', 'disabled');
+                                $('#productCategory').attr('disabled', 'disabled');
+                            }
+                            else {
+                                $('#productType').removeAttr('disabled');
+                                $('#productCategory').removeAttr('disabled');
+                            }
+                            if (data.data.productTypeId == 2) {
+                                $('#repeatDay').remove();
+                                $('#prType').append(`<input class='numberInput form-control' placeholder='Təkrarlanma günü' id='repeatDay' type='number' min='1'>`);
+                            }
+
+                            $('#repeatDay').val(data.data.repeatDay);
+                            document.getElementById('productType').value = data.data.productTypeId;
+                            console.log(data.data.productCategories.length)
+                            if (data.data.productCategories.length !== 0) {
+                                document.getElementById('productCategory').value = data.data.productCategories[0].categoryId;
+                            }
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+            });
+        })
+    </script>
+
+
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".deletelink", function () {
+                $('.unauth').remove();
+                if (confirm('Are you sure you want to delete this product?')) {
+                    clickedId = $(this).attr("id")
+                    $.ajax({
+                        url: document.location.origin + '/Product/DeleteProductById?id=' + clickedId,
+                        type: 'DELETE',
+                        success: function (result) {
+                            refreshdata();
+                        },
+                        error: function (httpObj) {
+                            if (httpObj.status == 403)
+                                $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                            else
+                                alert('error');
+                        }
+                    });
+                }
+            });
+        })
+    </script>
+
+    <script name="validationregion">
+        function validationcheck() {
+            $('.validator').remove();
+            let auth = true;
+
+            $('.myvalidation').each(function () {
+                if ($(this).val().trim() == "") {
+                    auth = false;
+                }
+            })
+            return auth;
+        }
+
+        function delay(callback, ms) {
+            var timer = 0;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    callback.apply(context, args);
+                }, ms || 0);
+            };
+        }
+
+        $(document).on("input", ".numberInput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+
+        }, 700));
+
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+            $(document).on("click", "#savebtn", function () {
+                $('.unauth').remove();
+                if (validationcheck()) {
+                    $('#savebtn').attr('disabled', 'disabled');
+                    $('#savebtn').after("<span class='waitt text-success' style='margin-left:10px;'>Please wait</span>")
+                    var command = "";
+                    var url = "";
+                    if ($('#id').val() == "") {
+                        command = { name: $('#name').val(), barcode: $('#barcode').val(), description: $('#description').val(), balance: $('#balance').val(), productTypeId: $('#productType').val(), price: $('#price').val(), repeatDay: $('#repeatDay').val(), categoryId: $('#productCategory').val() }
+                        url = '@Url.Action("CreateProduct", "Product")'
+                    }
+                    else {
+                        command = { id: $('#id').val(), name: $('#name').val(), barcode: $('#barcode').val(), description: $('#description').val(), balance: $('#balance').val(), productTypeId: $('#productType').val(), price: $('#price').val(), repeatDay: $('#repeatDay').val() }
+                        url = '@Url.Action("UpdateProduct", "Product")'
+                    }
+
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: command,
+                        success: function (data) {
+                            refreshdata();
+                            $('#editmodal').modal('hide')
+                            $('.waitt').remove();
+                            $('#savebtn').removeAttr('disabled');
+                        },
+                        error: function (httpObj) {
+                            $('#savebtn').removeAttr('disabled');
+                            $('.waitt').remove();
+                            if (httpObj.status == 403)
+                                $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                            else
+                                alert('error');
+                        }
+                    });
+                }
+
+
+            });
+        })
+    </script>
+
+    <script>
+        $("#productType").on("change", function () {
+            $('#repeatDay').val("");
+            if ($("#productType option:selected").val() == 2)
+                $('#prType').append(`<input class='numberInput form-control' placeholder='Repeat day' id='repeatDay' type='number' min='1'>`)
+            else
+                $('#repeatDay').remove();
+        });
+    </script>
+
+}

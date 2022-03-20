@@ -1,0 +1,39 @@
+﻿@model List<UserNotificationsViewModel>
+
+
+<li class="dropdown hidden-xs">
+    <a href="#" data-target="#" class="dropdown-toggle waves-effect" data-toggle="dropdown" aria-expanded="true">
+        <i class="icon-bell"></i>
+        @if (Model.Count != 0)
+        {
+            <span class="badge badge-xs badge-danger">@Model.Count</span>
+        }
+    </a>
+    <ul class="dropdown-menu dropdown-menu-lg">
+        <li class="notifi-title"><span class="label label-default pull-right">New @Model.Count</span>Notifications</li>
+        <li class="list-group nicescroll notification-list">
+
+            @foreach (var userNotification in Model)
+            {
+                <a onclick="javascript: window.location.reload(true);" href="/ProductTransfer/TransferProducts?transferId=@userNotification.Value" class="list-group-item">
+                    <div class="media">
+                        <div class="pull-left p-r-10">
+                            <em class="fa fa-bell-o fa-2x text-danger"></em>
+                        </div>
+                        <div class="media-body">
+                            <h5 class="media-heading">@userNotification.Name</h5>
+                            <p class="m-0">
+                                <small>@userNotification.Text</small>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            }
+        </li>
+        @*<li>
+                <a href="javascript:void(0);" class="list-group-item text-right">
+                    <small class="font-600">See all notifications</small>
+                </a>
+            </li>*@
+    </ul>
+</li>

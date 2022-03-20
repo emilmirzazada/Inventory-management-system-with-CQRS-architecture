@@ -1,0 +1,180 @@
+﻿
+
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Report</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+
+
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th> Name </th>
+                                    <th> Recipient </th>
+                                    <th> Amount </th>
+                                    <th> Date </th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Enter your  name">
+                            <input type="hidden" id="id" />
+                        </div>
+
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+        var refreshdata = function () {
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                "aaSorting": [],
+                ajax: {
+                    url: document.location.origin + '/Finance/GetBalanceTransactions',
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "employee.fullName", name: "Name" },
+                    { data: "recieverEmployee.fullName", name: "rname" },
+                    { data: "amount", name: "amount" },
+                    { data: "recieveDatee", name: "recieveDate" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            document.getElementById("id").value = "";
+            document.getElementById("name").value = "";
+        }
+        refreshdata();
+
+    </script>
+
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".editlink", function () {
+                $('.modal-content').addClass('d-none')
+                $('#modalspinner').remove();
+                emptydata();
+                $('.modal-content').append('<div id="modalspinner" class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>')
+                clickedId = $(this).attr("id")
+                $.ajax(
+                    {
+                        url: document.location.origin + '/Region/GetRegionById?id=' + clickedId,
+                        type: 'GET',
+                        data: "",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            console.log(data)
+                            $('#id').val(data.data.id);
+                            $('#name').val(data.data.name);
+
+                            $('#modalspinner').remove();
+                            $('.modal-content').removeClass('d-none')
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+            });
+        })
+    </script>
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".deletelink", function () {
+                if (confirm('Are you sure you want to delete this region??'))
+                    clickedId = $(this).attr("id")
+                    $.ajax({
+                    url: document.location.origin + '/Region/DeleteRegionById?id=' + clickedId,
+                    type: 'DELETE',
+                    success: function (result) {
+                        refreshdata();
+                    }
+                });
+
+            });
+        })
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+            $(document).on("click", "#receiveBalance", function () {
+                if (confirm("Are you sure you want to accept this employee's balance?")) {
+                    var command = { employeeId: $(this).attr('data-employeeId'), amount: $(this).attr('data-amount') }
+                var url = '@Url.Action("", "")';
+                $.ajax({
+                    url: url,
+                    type: "post",
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: command,
+                    success: function (data) {
+                        refreshdata();
+                        $('#editmodal').modal('hide')
+                    },
+                    error: function (httpObj) {
+                        if (httpObj.status == 403)
+                            $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                        else
+                            console.log(httpObj);
+                            alert('error');
+                    }
+                });
+                }
+            });
+        })
+    </script>
+
+}

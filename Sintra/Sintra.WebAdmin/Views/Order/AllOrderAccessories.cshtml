@@ -1,0 +1,604 @@
+﻿
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+
+
+<link href="~/plugins/timepicker/bootstrap-timepicker.min.css" rel="stylesheet">
+<link href="~/plugins/mjolnic-bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet">
+<link href="~/plugins/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" rel="stylesheet">
+<link href="~/plugins/clockpicker/dist/jquery-clockpicker.min.css" rel="stylesheet">
+<link href="~/plugins/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+
+<style>
+
+    @*.topbar {
+        z-index: 10000;
+    }
+
+    body.fixed-left .side-menu.left {
+        z-index: 10000;
+    }*@
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .acquiring_side .credit_table.show_me {
+        display: block;
+    }
+
+    .credit_table {
+        border: 1px solid #d8d8d8;
+        overflow: hidden;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -khtml-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+        .credit_table table tbody tr td label {
+            display: block;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .credit_table h3 {
+            padding: 20px 15px;
+            text-align: center;
+            font-family: 'Roboto';
+            font-size: 20px;
+        }
+
+        .credit_table > div {
+            overflow-x: auto;
+        }
+
+        .credit_table table {
+            width: 100%;
+            text-align: center;
+        }
+
+            .credit_table table thead tr td {
+                padding: 8px 12px;
+                border-top: 1px solid #d8d8d8;
+                border-left: 1px solid #d8d8d8;
+                background: #f8f8f8;
+            }
+
+            .credit_table table tbody tr td {
+                border-top: 1px solid #d8d8d8;
+                border-left: 1px solid #d8d8d8;
+            }
+</style>
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Accessories</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box">
+
+                        <div class="row">
+                            <div class="col-lg-8">
+
+                                <div class="p-20">
+                                    <form action="#" class="form-horizontal">
+
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">
+                                 Date interval</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-daterange input-group" id="date-range">
+                                                    <input type="text" class="form-control" name="start" />
+                                                    <span class="input-group-addon bg-custom b-0 text-white">to</span>
+                                                    <input type="text" class="form-control" name="end" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+
+                                <div class="p-20">
+                                    <button id="addToTable" data-toggle='modal' onclick="refreshdata();"
+                                            class="btn btn-default waves-effect waves-light">
+                                        Search
+                                    </button>
+                                </div>
+
+
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th> Client </th>
+                                    <th> Number </th>
+                                    <th> Employee </th>
+                                    <th> Accessory </th>
+                                    <th> Date of change </th>
+                                    <th> Last change date </th>
+                                    <th> Call </th>
+                                    <th> Refresh </th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Status <span style="color:red;">*</span></label>
+                            <select id="statusId" class="form-control">
+                                @foreach (var item in ExpirationCallStatus.ExpirationCallStatuses)
+                                {
+                                    <option value="@item.Id">@item.Value</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:grid;">
+                            <label>Next call date</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="dd/mm/yyyy" id="datepicker-autoclose">
+                                    <span class="input-group-addon bg-custom b-0 text-white"><i class="icon-calender"></i></span>
+                                </div><!-- input-group -->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Comment </label>
+                            <input type="text" class="form-control" id="comment" name="comment" placeholder="Enter your comment">
+                            <input type="hidden" id="orderAccessoryId" value="" />
+                            <input type="hidden" id="id" value="" />
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="updateaccsessuarmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Status <span style="color:red;">*</span></label>
+                            <select id="statusId" class="form-control">
+                                @foreach (var item in ExpirationCallStatus.ExpirationCallStatuses)
+                                {
+                                    <option value="@item.Id">@item.Value</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:grid;">
+                            <label>Next call date</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="dd/mm/yyyy" id="datepicker-autoclose">
+                                    <span class="input-group-addon bg-custom b-0 text-white"><i class="icon-calender"></i></span>
+                                </div><!-- input-group -->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Comment </label>
+                            <input type="text" class="form-control" id="comment" name="comment" placeholder="Enter your  comment">
+                            <input type="hidden" id="orderAccessoryId" value="" />
+                            <input type="hidden" id="id" value="" />
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+
+        var refreshdata = function () {
+            var fromDate = document.getElementsByName("start")[0].value;
+            var toDate = document.getElementsByName("end")[0].value;
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                ajax: {
+                    url: document.location.origin + '/Order/GetAllOrderAccessories?toDate=' + toDate + ' &fromDate=' + fromDate,
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "order.client.fullName", name: "Client Name" },
+                    { data: "order.client.phonenumber", name: "Client Phone" },
+                    { data: "order.employee.fullName", name: "Employee Name" },
+                    { data: "accessory.name", name: "Accessory Name" },
+                    { data: "repeatDatee", name: "RepeatDatee" },
+                    { data: "lastRepeatDatee", name: "LastRepeatDatee" },
+                    { data: "addCall", name: "addCall" },
+                    { data: "updateAccessory", name: "updateAccessory" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            document.getElementById("comment").value = "";
+        }
+
+        var resetzIndex = function () {
+            document.getElementsByClassName("topbar")[0].style.zIndex = "999";
+            document.getElementsByClassName("side-menu")[0].style.zIndex = "0";
+        }
+
+        refreshdata();
+
+    </script>
+      
+    <script>
+        $('.initialinput').keyup(function () {
+            if ($('#initialinput').val() <= $('#totalprice').text() && $('#initialinput').val() != '' && $('#monthinput').val() != '') {
+                let month = $('#monthinput').val();
+                let monthlyamount = ($('#totalprice').text() - $('#initialinput').val()) / month;
+                $(this).parent().parent().parent().children().eq(2).empty().append(parseFloat(monthlyamount).toFixed(2));
+            }
+            else {
+                $(this).parent().parent().parent().children().eq(2).empty().append('-');
+            }
+        });
+    </script>
+
+
+
+    <script name="validationregion">
+        function validationcheck() {
+
+            let auth = true;
+
+            if ($('.s2id_productId').val() == "")
+                auth = false;
+            if ($('#warehouseId').val() == "") {
+                console.log('ups');
+                auth = false;
+            }
+
+            $('.myvalidation').each(function () {
+                if ($(this).val() == "") {
+                    console.log($(this).attr("id"));
+                    auth = false;
+                }
+            })
+            return auth;
+        }
+
+        function delay(callback, ms) {
+            var timer = 0;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    callback.apply(context, args);
+                }, ms || 0);
+            };
+        }
+
+        $(document).on("input", ".initialinput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+        }, 700));
+
+        $(document).on("input", ".phoneinput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+        }, 700));
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            $("#productId").on("change", function () {
+                $('#totalprice').text('');
+                if ($("#productId").val() != "") {
+                    $.ajax(
+                        {
+                            url: document.location.origin + '/Product/GetProductById?id=' + $('#productId').val(),
+                            type: 'GET',
+                            data: "",
+                            contentType: 'application/json; charset=utf-8',
+                            success: function (data) {
+                                console.log(data)
+                                $('#totalprice').text(data.data.price);
+                            },
+                            error: function () {
+                                alert("error");
+                            }
+                        });
+                }
+            });
+        });
+
+
+    </script>
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".editlink", function () {
+                $('#orderAccessoryId').val($(this).attr("id"));
+            });
+        })
+    </script>
+
+
+    <script name="updateaccessory">
+        $(document).ready(function () {
+
+            $(document).on("click", ".updateaccessorylink", function () {
+                if (confirm('Are you sure you want to update this accessory?')) {
+                    $('.updateaccessorylink').attr('disabled', 'disabled');
+                    var command = "";
+                    var url = "";
+                    command =
+                    {
+                        id: $(this).attr("id")
+                    };
+                    url = '@Url.Action("UpdateOrderAccessory", "Order")'
+
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: command,
+                        success: function (data) {
+                            refreshdata();
+                            $('#savebtn').removeAttr('disabled');
+                        },
+                        error: function (httpObj) {
+                            $('.updateaccessorylink').removeAttr('disabled');
+                            if (httpObj.status == 403)
+                               alert("You don't have permission");
+                            else
+                                alert('error');
+                        }
+                    });
+                }
+            });
+        })
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+            $(document).on("click", "#savebtn", function () {
+                $('.unauth').remove();
+                if (validationcheck()) {
+                    $('#savebtn').attr('disabled', 'disabled');
+                    $('#savebtn').after("<span class='waitt text-success' style='margin-left:10px;'>Please wait</span>")
+                    var command = "";
+                    var url = "";
+                    if ($('#id').val() == "") {
+                        command =
+                        {
+                            nextCallDate: $('#datepicker-autoclose').val(),
+                            orderAccessoryId: $('#orderAccessoryId').val(),
+                            statusId: $('#statusId').val(),
+                            comment: $('#comment').val()
+                        };
+                        console.log(command);
+                        url = '@Url.Action("CreateExpirationCall", "Call")'
+                    }
+
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: command,
+                        success: function (data) {
+                            $('#editmodal').modal('hide')
+                            $('.waitt').remove();
+                            $('#savebtn').removeAttr('disabled');
+                        },
+                        error: function (httpObj) {
+                            $('#savebtn').removeAttr('disabled');
+                            $('.waitt').remove();
+                            if (httpObj.status == 403)
+                                $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                            else
+                                alert('error');
+                        }
+                    });
+                }
+            });
+        })
+    </script>
+
+
+    <script src="~/plugins/moment/moment.js"></script>
+    <script src="~/plugins/timepicker/bootstrap-timepicker.min.js"></script>
+    <script src="~/plugins/mjolnic-bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+    <script src="~/plugins/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/plugins/clockpicker/dist/jquery-clockpicker.min.js"></script>
+    <script src="~/plugins/bootstrap-daterangepicker/daterangepicker.js"></script>
+
+    <script>
+        jQuery(document).ready(function () {
+
+            // Time Picker
+            jQuery('#timepicker').timepicker({
+                defaultTIme: false
+            });
+            jQuery('#timepicker2').timepicker({
+                showMeridian: false
+            });
+            jQuery('#timepicker3').timepicker({
+                minuteStep: 15
+            });
+
+            //colorpicker start
+
+            $('.colorpicker-default').colorpicker({
+                format: 'hex'
+            });
+            $('.colorpicker-rgba').colorpicker();
+
+            // Date Picker
+            jQuery('#datepicker').datepicker();
+            jQuery('#datepicker-autoclose').datepicker({
+                autoclose: true,
+                todayHighlight: true,
+                format: "mm/dd/yyyy"
+            });
+            jQuery('#datepicker-inline').datepicker();
+            jQuery('#datepicker-multiple-date').datepicker({
+                format: "mm/dd/yyyy",
+                clearBtn: true,
+                multidate: true,
+                multidateSeparator: ","
+            });
+            jQuery('#date-range').datepicker({
+                toggleActive: true
+            });
+
+            //Clock Picker
+            $('.clockpicker').clockpicker({
+                donetext: 'Done'
+            });
+
+            $('#single-input').clockpicker({
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                'default': 'now'
+            });
+            $('#check-minutes').click(function (e) {
+                // Have to stop propagation here
+                e.stopPropagation();
+                $("#single-input").clockpicker('show')
+                    .clockpicker('toggleView', 'minutes');
+            });
+
+
+            //Date range picker
+            $('.input-daterange-datepicker').daterangepicker({
+                buttonClasses: ['btn', 'btn-sm'],
+                applyClass: 'btn-default',
+                cancelClass: 'btn-white'
+            });
+            $('.input-daterange-timepicker').daterangepicker({
+                timePicker: true,
+                format: 'MM/DD/YYYY h:mm A',
+                timePickerIncrement: 30,
+                timePicker12Hour: true,
+                timePickerSeconds: false,
+                buttonClasses: ['btn', 'btn-sm'],
+                applyClass: 'btn-default',
+                cancelClass: 'btn-white'
+            });
+            $('.input-limit-datepicker').daterangepicker({
+                format: 'MM/DD/YYYY',
+                minDate: '06/01/2015',
+                maxDate: '06/30/2015',
+                buttonClasses: ['btn', 'btn-sm'],
+                applyClass: 'btn-default',
+                cancelClass: 'btn-white',
+                dateLimit: {
+                    days: 6
+                }
+            });
+
+            $('#reportrange span').html(moment().subtract(29, 'days').format('MMMM D, YYYY') + ' - ' + moment().format('MMMM D, YYYY'));
+
+            $('#reportrange').daterangepicker({
+                format: 'MM/DD/YYYY',
+                startDate: moment().subtract(29, 'days'),
+                endDate: moment(),
+                minDate: '01/01/2012',
+                maxDate: '12/31/2015',
+                dateLimit: {
+                    days: 60
+                },
+                showDropdowns: true,
+                showWeekNumbers: true,
+                timePicker: false,
+                timePickerIncrement: 1,
+                timePicker12Hour: true,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                opens: 'left',
+                drops: 'down',
+                buttonClasses: ['btn', 'btn-sm'],
+                applyClass: 'btn-default',
+                cancelClass: 'btn-white',
+                separator: ' to ',
+                locale: {
+                    applyLabel: 'Submit',
+                    cancelLabel: 'Cancel',
+                    fromLabel: 'From',
+                    toLabel: 'To',
+                    customRangeLabel: 'Custom',
+                    daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'], 
+                    monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    firstDay: 1
+                }
+            }, function (start, end, label) {
+                console.log(start.toISOString(), end.toISOString(), label);
+                $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            });
+
+        });
+    </script>
+
+
+}

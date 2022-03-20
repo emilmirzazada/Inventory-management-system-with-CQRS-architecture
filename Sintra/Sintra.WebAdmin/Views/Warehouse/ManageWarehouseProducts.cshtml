@@ -1,0 +1,339 @@
+﻿@model ManageWarehouseProductsViewModel
+
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Warehouse products</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="m-b-30">
+                        <button id="addToTable" data-toggle='modal' onclick="emptydata(); addlink();"
+                                data-target='#editmodal'
+                                class="btn btn-default waves-effect waves-light">
+                           Add <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="m-b-30">
+                        <button id="transferbtn" onclick="
+                if(confirm('Are you sure you want to transfer selected products?'))
+                $('#transfermodal').modal('show');"
+                                class="btn btn-default waves-effect waves-light">
+                            Transfer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                   <th> Warehouse </th>
+                                    <th> Product </th>
+                                    <th> Balance </th>
+                                    <th> </th>
+                                    <th> Transfer </th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="form-group">
+                            <select id="productId" class="form-control">
+                                @foreach (var item in Model.Products)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Balance</label>
+                            <input type="text" class="form-control myvalidation" id="balance" name="balance" placeholder="Enter the balance">
+                            <input type="hidden" id="id" />
+                        </div>
+
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="transfermodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel2" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <input type="hidden" id="id" />
+                        <div class="form-group">
+                            <select id="warehouseId" class="form-control">
+                                @foreach (var item in Model.Warehouses)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="sendrequestbtn" class="btn btn-primary">
+                             Send a request
+                              </button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+        var refreshdata = function () {
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                ajax: {
+                    url: document.location.origin + '/Warehouse/GetWarehouseProductsByWarehouseId?id=' + @ViewBag.Id,
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "warehouse.name", name: "Warehouse Name" },
+                    { data: "product.name", name: "Product Name" },
+                    { data: "balance", name: "Balance" },
+                    { data: "actions", name: "actions" },
+                    { data: "transfer", name: "Transfer" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            document.getElementById("id").value = "";
+            document.getElementById("balance").value = "";
+            document.getElementById("productId").value = "";
+        }
+        var addlink = function () {
+            $('#productId').show();
+        }
+        refreshdata();
+
+    </script>
+
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".editlink", function () {
+                $('#productId').hide();
+                $('.unauth').remove();
+                emptydata();
+                $('.modal-content').append('<div id="modalspinner" class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>')
+                clickedId = $(this).attr("id")
+                $.ajax(
+                    {
+                        url: document.location.origin + '/Warehouse/GetWarehouseProduct?id=' + @ViewBag.Id + '&productId=' + clickedId,
+                        type: 'GET',
+                        data: "",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            console.log(data)
+                            $('#id').val(clickedId);
+                            $('#productId').val(data.data.productId);
+                            $('#balance').val(data.data.balance);
+
+                            $('#modalspinner').remove();
+                            $('.modal-content').removeClass('d-none')
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+            });
+        })
+    </script>
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".deletelink", function () {
+                $('.unauth').remove();
+                if (confirm('Are you sure you want to delete this product from this warehouse?'))
+                    clickedId = $(this).attr("id")
+                    $.ajax({
+                    url: document.location.origin + '/Warehouse/DeleteWarehouseProduct?id=' + @ViewBag.Id + '&productId=' + clickedId,
+                    type: 'DELETE',
+                    success: function (result) {
+                        refreshdata();
+                    },
+                    error: function () {
+                        if (httpObj.status == 403)
+                            $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                        else
+                            alert('error');
+                    }
+                });
+
+            });
+        })
+    </script>
+
+    <script name="validationregion">
+        function validationcheck() {
+            $('.validator').remove();
+            let auth = true;
+
+            $('.myvalidation').each(function () {
+                if ($(this).val().trim() == "") {
+                    auth = false;
+                }
+            })
+            return auth;
+        }
+
+        function delay(callback, ms) {
+            var timer = 0;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    callback.apply(context, args);
+                }, ms || 0);
+            };
+        }
+
+        $(document).on("input", ".productcountinput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+
+        }, 700));
+
+
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+            $(document).on("click", "#savebtn", function () {
+                if (validationcheck()) {
+                    $('.unauth').remove();
+                var command = "";
+                var url = "";
+                if ($('#id').val() == "") {
+                    command = { warehouseId: @ViewBag.Id, productId: $('#productId').val(), balance: $('#balance').val() }
+                    url = '@Url.Action("AddWarehouseProduct", "Warehouse")'
+                }
+                else {
+                    command = { warehouseId: @ViewBag.Id, productId: $('#id').val(), balance: $('#balance').val() }
+                    url = '@Url.Action("UpdateWarehouseProduct", "Warehouse")'
+                }
+
+                $.ajax({
+                    url: url,
+                    type: "post",
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: command,
+                    success: function (data) {
+                        refreshdata();
+                        $('#editmodal').modal('hide')
+                    },
+                    error: function () {
+                        if (httpObj.status == 403)
+                            $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                        else
+                            alert('error');
+                    }
+                });
+                }
+
+            });
+        })
+    </script>
+
+    <script name="transfer">
+        $(document).ready(function () {
+
+            $(document).on("click", "#sendrequestbtn", function () {
+                $('.unauth').remove();
+                let products = [];
+                var inputs = $(".productcountinput");
+
+                    var flag = false;
+                    for (var i = 0; i < inputs.length; i++) {
+                        if ($(inputs[i]).val()!="") {
+                            products.push(
+                                {
+                                    productId: $(inputs[i]).attr("id"),
+                                    quantity: $(inputs[i]).val()
+                                });
+                            flag = true;
+                        }
+                    }
+
+                    var command = {
+                        fromWarehouseId: @ViewBag.Id,
+                        toWarehouseId: $('#warehouseId').val(),
+                        products: products
+                    }
+                    console.log(flag);
+                    if (flag) {
+                        var url = '@Url.Action("CreateProductTransfer", "ProductTransfer")'
+                        $.ajax({
+                            url: url,
+                            type: "post",
+                            contentType: 'application/x-www-form-urlencoded',
+                            data: command,
+                            success: function (data) {
+                                $('#transfermodal').modal('hide')
+                                $("#sendrequestbtn").removeAttr("disabled");
+                                location.href = "/Warehouse/Warehouses"
+                            },
+                            error: function () {
+                                $("#sendrequestbtn").removeAttr("disabled");
+                                if (httpObj.status == 403)
+                                    $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                                else
+                                    alert('error');
+                            }
+                        });
+
+                        $("#sendrequestbtn").attr("disabled", "disabled");
+                    }
+
+
+            });
+        })
+    </script>
+
+}

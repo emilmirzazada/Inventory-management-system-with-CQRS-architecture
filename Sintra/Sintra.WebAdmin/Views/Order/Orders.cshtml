@@ -1,0 +1,691 @@
+﻿@model IEnumerable<GetAllProductsViewModel>
+
+<link href="~/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+
+
+<link href="~/plugins/multiselect/css/multi-select.css" rel="stylesheet" type="text/css" />
+<link href="~/plugins/select2/select2.css" rel="stylesheet" type="text/css" />
+<link href="~/plugins/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet" />
+<link href="~/plugins/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.css" rel="stylesheet" />
+
+<style>
+
+    .topbar {
+        z-index: 10000;
+    }
+    body.fixed-left .side-menu.left {
+        z-index: 10000;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .acquiring_side .credit_table.show_me {
+        display: block;
+    }
+
+    .credit_table {
+        border: 1px solid #d8d8d8;
+        overflow: hidden;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -khtml-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+        .credit_table table tbody tr td label {
+            display: block;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .credit_table h3 {
+            padding: 20px 15px;
+            text-align: center;
+            font-family: 'Roboto';
+            font-size: 20px;
+        }
+
+        .credit_table > div {
+            overflow-x: auto;
+        }
+
+        .credit_table table {
+            width: 100%;
+            text-align: center;
+        }
+
+            .credit_table table thead tr td {
+                padding: 8px 12px;
+                border-top: 1px solid #d8d8d8;
+                border-left: 1px solid #d8d8d8;
+                background: #f8f8f8;
+            }
+
+            .credit_table table tbody tr td {
+                border-top: 1px solid #d8d8d8;
+                border-left: 1px solid #d8d8d8;
+            }
+</style>
+
+<div class="content-page">
+    <!-- Start content -->
+    <div class="content">
+        <div class="container">
+
+            <!-- Page-Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 class="page-title">Administration</h4>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="#">Administration</a>
+                        </li>
+                        <li>
+                            <a href="#">Orders</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="m-b-30">
+                        <button id="addToTable" data-toggle='modal' onclick="emptydata(); resetzIndex();"
+                                data-target='#editmodal'
+                                class="btn btn-default waves-effect waves-light">
+                          Add <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <table id="datatable-editable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Product</th>
+                                   
+                                     <th> Price </th>
+                                    <th> Create date </th>
+                                    <th> Employee </th>
+                                    <th> Product Accessories </th>
+                                    <th> Credit </th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <label for="exampleInputEmail1">Product <span style="color:red;">*</span></label>
+                        <select id="productId" class="form-control select2">
+                            <option value="">Select</option>
+                            <optgroup label="Products">
+                                @foreach (var pr in Model.Where(x => x.ProductTypeId == 1))
+                                {
+                                    <option value="@pr.Id">@pr.Name</option>
+
+                                }
+                            </optgroup>
+                            <optgroup label="Accessories">
+                                @foreach (var pr in Model.Where(x => x.ProductTypeId == 2))
+                                {
+                                    <option value="@pr.Id">@pr.Name</option>
+
+                                }
+                            </optgroup>
+
+                        </select>
+
+                        <label for="exampleInputEmail1">Warehouse <span style="color:red;margin-top:15px;">*</span></label>
+                        <select id="warehouseId" class="form-control select2">
+                            <option value="">Select</option>
+                        </select>
+
+                        <div class="form-group" style="margin-top:15px;">
+                            <label for="exampleInputEmail1">Name <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control myvalidation" id="firstName" name="firstName" placeholder="Enter your name">
+                            <input type="hidden" id="id" />
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Surname <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control myvalidation" id="lastName" name="lastName" placeholder="Enter your surname">
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Fin code <span style="color:red;">*</span> </label>
+                            <input type="text" class="form-control myvalidation" id="finCode" name="finCode" placeholder="Enter your fin code">
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Telephone number <span style="color:red;">*</span></label>
+                            <input class="phoneinput form-control myvalidation" id="phonenumber" name="phonenumber" placeholder="Enter your phone number"  type="number" min="0">
+                            
+                        </div>
+
+                        <div class="form-check" style="margin-bottom:10px;">
+                            <input class="form-check-input" type="checkbox" value="" id="isCredit">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Credit
+                            </label>
+                        </div>
+
+                        <div id="credittable" style="border: 1px solid #d8d8d8;margin-bottom:20px;" class="credit_table show_me myd-none">
+                            <div>
+                                <table id="MwDataList">
+                                    <thead>
+                                        <tr>
+                                            <td>The initial payment<span style="color:red;">*</span></td>
+                                            <td>Duration <span style="color:red;">*</span></td>
+                                            <td> Monthly payment </td>
+                                            <td> Final payment </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><label style="display:flex;justify-content:center;"><input id="initialinput" class="initialinput form-control" style="width:70px; padding-left: 4px !important; padding-right: 4px !important; font-size: 14px !important;" type="number" min="0"></label></td>
+                                            <td><label><input id="monthinput" class="initialinput form-control" style="width:48px; padding-left: 4px !important; padding-right: 4px !important; font-size: 14px !important;display:inline-block;" type="number" min="0"> month</label></td>
+                                            <td><label class="lbl">-</label></td>
+                                            <td><label id="totalprice"></label></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" id="savebtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="creditmodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+
+                        <div id="creditdata" style="border: 1px solid #d8d8d8;margin-bottom:20px;margin-top:35px;" class="credit_table show_me">
+                            <div>
+                                <table id="MwDataList">
+                                    <thead>
+                                        <tr>
+                                           
+                                            <td> Initial payment </td>
+                                            <td> Duration </td>
+                                            <td> Monthly payment </td>
+                                            <td> Payment date </td>
+                                            <td> Debt </td>
+                                            <td> Final payment </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><label id="initiallbl" class="mylbl"></label></td>
+                                            <td><label id="termlbl" class="mylbl"></label></td>
+                                            <td><label id="monthlylbl" class="lbl mylbl"></label></td>
+                                            <td><label id="datelbl" class="lbl mylbl"></label></td>
+                                            <td><label id="debtlbl" class="lbl mylbl"></label></td>
+                                            <td><label id="totalpricelbl" class="mylbl"></label></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6" style="float:right;">
+                                <div class="m-b-30">
+                                    <button id="paymentslink" data-creditId="" style="float:right;"
+                                            class="btn btn-default waves-effect waves-light">
+                                        Payments
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- container -->
+
+    </div> <!-- content -->
+
+    <footer class="footer">
+        2022 © Sintra.
+    </footer>
+
+</div>
+
+
+@section Scripts{
+
+    <script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/plugins/datatables/dataTables.bootstrap.js"></script>
+
+    <script name="datatable" type="text/javascript">
+
+        var refreshdata = function () {
+            var table = $('#datatable-editable').DataTable({
+                destroy: true,
+                "aaSorting": [],
+                ajax: {
+                    url: document.location.origin + '/Order/GetOrders'+'?clientId='+@ViewBag.clientId,
+                    dataSrc: 'data',
+                },
+                columns: [
+                    { data: "clientName", name: "Client Name" },
+                    { data: "product.name", name: "Product Name" },
+                    { data: "price", name: "Price" },
+                    { data: "createDatee", name: "Create Date" },
+                    { data: "employeeName", name: "Employee Name" },
+                    { data: "orderAccessories", name: "Order Accessories" },
+                    { data: "isCredit", name: "Credit" },
+                    { data: "actions", name: "Actions" }
+                ]
+            });
+        }
+
+        var emptydata = function () {
+            document.getElementById("s2id_productId").value = "";
+            document.getElementById("firstName").value = "";
+            document.getElementById("lastName").value = "";
+            document.getElementById("finCode").value = "";
+            document.getElementById("phonenumber").value = "";
+            document.getElementById("isCredit").checked = false;
+            document.getElementById("initialinput").value = "";
+            document.getElementById("monthinput").value = "";
+            document.getElementById("credittable").classList.add("myd-none");
+
+            document.getElementsByClassName("mylbl").innerHTML = '';
+        }
+
+        var resetzIndex = function () {
+            document.getElementsByClassName("topbar")[0].style.zIndex = "999";
+            document.getElementsByClassName("side-menu")[0].style.zIndex = "0";
+        }
+
+        refreshdata();
+
+    </script>
+
+    <script>
+        $('.initialinput').keyup(function () {
+
+            
+
+            if ($('#initialinput').val() != '' && $('#monthinput').val() != '') {
+                let month = $('#monthinput').val();
+                let monthlyamount = ($('#totalprice').text() - $('#initialinput').val()) / month;
+                $(this).parent().parent().parent().children().eq(2).empty().append(parseFloat(monthlyamount).toFixed(2));
+            }
+            else { 
+                $(this).parent().parent().parent().children().eq(2).empty().append('-');
+            }
+        });
+    </script>
+
+    <script type="text/javascript">
+        
+        $(function () {
+
+            $("#productId").change(function () {
+                var e = document.getElementById("s2id_warehouseId").children[0].children[0];
+                e.innerHTML = 'Please wait';
+                $("#s2id_warehouseId").css("pointer-events", "none");
+
+                $.getJSON("/Warehouse/GetWarehousesByProductId", { productId: $("#productId").val() }, function (d) {
+
+                    var row = "";
+                    row += "<option value=''>" + "Select" + "</option>"
+                    $.each(d, function (i, v) {
+                        row += "<option value=" + v.warehouseId + ">" + v.warehouse.name + "</option>"
+                    });
+                    $("#warehouseId").empty();
+                    $("#warehouseId").html(row);
+                    e.innerHTML = 'Select';
+                    $("#s2id_warehouseId").css("pointer-events", "unset");
+                })
+            })
+        })
+    </script>
+
+
+    <script name="validationregion">
+        function validationcheck() {
+
+            let auth = true;
+
+            if ($('.s2id_productId').val() == "")
+                auth = false;
+            if ($('#warehouseId').val() == "") {
+                auth = false;
+            }
+
+            $('.myvalidation').each(function () {
+                if ($(this).val() == "") {
+                    auth = false;
+                }
+            })
+            return auth;
+        }
+
+        function delay(callback, ms) {
+            var timer = 0;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    callback.apply(context, args);
+                }, ms || 0);
+            };
+        }
+
+        $(document).on("input", ".initialinput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+        }, 700));
+
+        $(document).on("input", ".phoneinput", delay(function (e) {
+            this.validity.valid || (this.value = '');
+        }, 700));
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            $("#productId").on("change", function () {
+                $('#totalprice').text('');
+                if ($("#productId").val() != "") {
+                    $.ajax(
+                        {
+                            url: document.location.origin + '/Product/GetProductById?id=' + $('#productId').val(),
+                            type: 'GET',
+                            data: "",
+                            contentType: 'application/json; charset=utf-8',
+                            success: function (data) {
+                                document.getElementById("initialinput").setAttribute("max", data.data.price);
+                                $('#totalprice').text(data.data.price);
+                            },
+                            error: function () {
+                                alert("error");
+                            }
+                        });
+                }
+            });
+        });
+
+
+    </script>
+
+<script name="paymentslink">
+        $(document).ready(function () {
+            $(document).on("click", "#paymentslink", function () {
+                location.href = document.location.origin + '/Transaction/CreditTransactions?creditId=' + $(this).attr("data-creditId")
+            });
+        })
+    </script>
+
+    <script name="geteditdata">
+        $(document).ready(function () {
+            $(document).on("click", ".creditlink", function () {
+                
+                emptydata();
+                clickedId = $(this).attr("id")
+                $.ajax(
+                    {
+                        url: document.location.origin + '/Credit/GetCreditById?id=' + clickedId,
+                        type: 'GET',
+                        data: "",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            console.log(data)   
+                            $('#paymentslink').attr('data-creditId',clickedId)
+                            $('#initiallbl').text(data.data.initialPayment);
+                            $('#termlbl').text(data.data.term);
+                            $('#monthlylbl').text(data.data.monthly.toFixed(2));
+                            $('#totalpricelbl').text(data.data.amount);
+                            $('#datelbl').text(data.data.datee);
+                            $('#debtlbl').text(data.data.debt.toFixed(2));
+
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+            });
+        })
+    </script>
+
+    <script name="delete">
+        $(document).ready(function () {
+
+            $(document).on("change", "#isCredit", function () {
+                $(".initialinput").value = "";
+                $("#credittable").toggleClass('myd-none');
+                $(".initialinput").toggleClass('myvalidation');
+            });
+
+            $(document).on("click", ".deletelink", function () {
+                if (confirm('Are you sure you want to delete this order?'))
+                    clickedId = $(this).attr("id")
+                $.ajax({
+                    url: document.location.origin + '/Order/DeleteOrder?id=' + clickedId,
+                    type: 'DELETE',
+                    success: function (result) {
+                        refreshdata();
+                    }
+                });
+
+            });
+        })
+    </script>
+
+    <script name="addoredit">
+        $(document).ready(function () {
+            $(document).on("click", "#savebtn", function () {
+                $('.unauth').remove();
+                if (validationcheck()) {
+                    $('#savebtn').attr('disabled', 'disabled');
+                    $('#savebtn').after("<span class='waitt text-success' style='margin-left:10px;'>Please wait</span>")
+                    var command = "";
+                    var url = "";
+                    var term = 0;
+                    var initialpayment = "";
+                    if ($('#id').val() == "") {
+
+                        if ($("#isCredit").prop('checked') == true) {
+                            term = $('#monthinput').val();
+                            initialpayment = $('#initialinput').val();
+                        }
+                        command =
+                        {
+                            productId: $('#productId').val(),
+                            warehouseId: $('#warehouseId').val(),
+                            price: $('#price').val(),
+                            firstName: $('#firstName').val(),
+                            lastName: $('#lastName').val(),
+                            phonenumber: $('#phonenumber').val(),
+                            finCode: $('#finCode').val(),
+                            term: term,
+                            initialpayment: initialpayment
+                        };
+                        url = '@Url.Action("CreateOrder", "Order")'
+                    }
+
+                    $.ajax({
+                        url: url,
+                        type: "post",
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: command,
+                        success: function (data) {
+                            refreshdata();
+                            $('#editmodal').modal('hide')
+                            $('.waitt').remove();
+                            $('#savebtn').removeAttr('disabled');
+                        },
+                        error: function (httpObj) {
+                            $('#savebtn').removeAttr('disabled');
+                            $('.waitt').remove();
+                            if (httpObj.status == 403)
+                                $('#savebtn').after("<span class='unauth text-danger' style='margin-left:10px;'>You don't have permission</span>");
+                            else
+                                alert('error');
+                        }
+                    });
+                }
+            });
+        })
+    </script>
+
+
+
+
+    <script src="~/plugins/multiselect/js/jquery.multi-select.js" type="text/javascript"></script>
+    <script src="~/plugins/select2/select2.min.js" type="text/javascript"></script>
+
+
+    <script>
+        jQuery(document).ready(function () {
+
+            //advance multiselect start
+            $('#my_multi_select3').multiSelect({
+                selectableHeader: "<input type='text' class='form-control search-input' autocomplete='off' placeholder='search...'>",
+                selectionHeader: "<input type='text' class='form-control search-input' autocomplete='off' placeholder='search...'>",
+                afterInit: function (ms) {
+                    var that = this,
+                        $selectableSearch = that.$selectableUl.prev(),
+                        $selectionSearch = that.$selectionUl.prev(),
+                        selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                        selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+                    that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+                        .on('keydown', function (e) {
+                            if (e.which === 40) {
+                                that.$selectableUl.focus();
+                                return false;
+                            }
+                        });
+
+                    that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                        .on('keydown', function (e) {
+                            if (e.which == 40) {
+                                that.$selectionUl.focus();
+                                return false;
+                            }
+                        });
+                },
+                afterSelect: function () {
+                    this.qs1.cache();
+                    this.qs2.cache();
+                },
+                afterDeselect: function () {
+                    this.qs1.cache();
+                    this.qs2.cache();
+                }
+            });
+
+            // Select2
+            $(".select2").select2();
+
+            $(".select2-limiting").select2({
+                maximumSelectionLength: 2
+            });
+
+            $('.selectpicker').selectpicker();
+            $(":file").filestyle({ input: false });
+        });
+
+        //Bootstrap-TouchSpin
+        $(".vertical-spin").TouchSpin({
+            verticalbuttons: true,
+            verticalupclass: 'ion-plus-round',
+            verticaldownclass: 'ion-minus-round'
+        });
+        var vspinTrue = $(".vertical-spin").TouchSpin({
+            verticalbuttons: true
+        });
+        if (vspinTrue) {
+            $('.vertical-spin').prev('.bootstrap-touchspin-prefix').remove();
+        }
+
+        $("input[name='demo1']").TouchSpin({
+            min: 0,
+            max: 100,
+            step: 0.1,
+            decimals: 2,
+            boostat: 5,
+            maxboostedstep: 10,
+            postfix: '%'
+        });
+        $("input[name='demo2']").TouchSpin({
+            min: -1000000000,
+            max: 1000000000,
+            stepinterval: 50,
+            maxboostedstep: 10000000,
+            prefix: '$'
+        });
+        $("input[name='demo3']").TouchSpin();
+        $("input[name='demo3_21']").TouchSpin({
+            initval: 40
+        });
+        $("input[name='demo3_22']").TouchSpin({
+            initval: 40
+        });
+
+        $("input[name='demo5']").TouchSpin({
+            prefix: "pre",
+            postfix: "post"
+        });
+        $("input[name='demo0']").TouchSpin({});
+
+
+        //Bootstrap-MaxLength
+        $('input#defaultconfig').maxlength()
+
+        $('input#thresholdconfig').maxlength({
+            threshold: 20
+        });
+
+        $('input#moreoptions').maxlength({
+            alwaysShow: true,
+            warningClass: "label label-success",
+            limitReachedClass: "label label-danger"
+        });
+
+        $('input#alloptions').maxlength({
+            alwaysShow: true,
+            warningClass: "label label-success",
+            limitReachedClass: "label label-danger",
+            separator: ' out of ',
+            preText: 'You typed ',
+            postText: ' chars available.',
+            validate: true
+        });
+
+        $('textarea#textarea').maxlength({
+            alwaysShow: true
+        });
+
+        $('input#placement').maxlength({
+            alwaysShow: true,
+            placement: 'top-left'
+        });
+    </script>
+
+}
